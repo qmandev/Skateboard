@@ -16,6 +16,7 @@
 		A9CB54AD2478AFE800DD4922 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A9CB54AC2478AFE800DD4922 /* Assets.xcassets */; };
 		A9CB54B02478AFE800DD4922 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = A9CB54AE2478AFE800DD4922 /* LaunchScreen.storyboard */; };
 		A9CB54BB2478AFE800DD4922 /* SkateboardUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9CB54BA2478AFE800DD4922 /* SkateboardUITests.swift */; };
+		A9CB54C624796D1600DD4922 /* Skater.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9CB54C524796D1600DD4922 /* Skater.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -42,6 +43,7 @@
 		A9CB54B62478AFE800DD4922 /* SkateboardUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = SkateboardUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		A9CB54BA2478AFE800DD4922 /* SkateboardUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SkateboardUITests.swift; sourceTree = "<group>"; };
 		A9CB54BC2478AFE800DD4922 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		A9CB54C524796D1600DD4922 /* Skater.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Skater.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -86,6 +88,7 @@
 				A9CB549F2478AFE400DD4922 /* AppDelegate.swift */,
 				A9CB54A12478AFE400DD4922 /* GameScene.sks */,
 				A9CB54A32478AFE400DD4922 /* Actions.sks */,
+				A9CB54C524796D1600DD4922 /* Skater.swift */,
 				A9CB54A52478AFE400DD4922 /* GameScene.swift */,
 				A9CB54A72478AFE400DD4922 /* GameViewController.swift */,
 				A9CB54A92478AFE400DD4922 /* Main.storyboard */,
@@ -209,6 +212,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				A9CB54A62478AFE400DD4922 /* GameScene.swift in Sources */,
+				A9CB54C624796D1600DD4922 /* Skater.swift in Sources */,
 				A9CB54A82478AFE400DD4922 /* GameViewController.swift in Sources */,
 				A9CB54A02478AFE400DD4922 /* AppDelegate.swift in Sources */,
 			);
