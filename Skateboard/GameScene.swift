@@ -9,7 +9,23 @@
 import SpriteKit
 import GameplayKit
 
-class GameScene: SKScene {
+// This struct holds various physics categorie, so we can define
+// which object types collide or have contact with each other
+struct PhysicsCategory {
+    static let skater: UInt32 = 0x1 << 0
+    static let brick: UInt32 = 0x1 << 1
+    static let gem: UInt32 = 0x1 << 2
+}
+
+
+class GameScene: SKScene, SKPhysicsContactDelegate {
+    
+    // Enum for y-position spawn points for bricks
+    // Ground bricks are low and upper platforms bricks are high
+    enum BrickLevel: CGFloat {
+        case low = 0.0
+        case high = 100.0
+    }
     
     private var label : SKLabelNode?
     private var spinnyNode : SKShapeNode?
@@ -20,9 +36,13 @@ class GameScene: SKScene {
     // The size of the sidewalk brick graphics used
     var brickSize = CGSize.zero
     
+    // The current brick level determine the y-position of new bricks
+    var brickLevel = BrickLevel.low
+    
     // Setting for how fast the game is scrolling to the right
     // This may increase as the user progresses in the game
     var scrollSpeed: CGFloat = 5.0
+    let startingScrollSpeed: CGFloat = 5.0
     
     // A constant for gravity, or how fast objects will fall to Earth
     let gravitySpeed : CGFloat = 1.5
@@ -30,10 +50,18 @@ class GameScene: SKScene {
     // The timestamp of the last update method call
     var lastUpdateTime: TimeInterval?
     
+    // An array that holds all the current gems
+    var gems = [SKSpriteNode]()
+    
     // the skater is created here
     let skater = Skater(imageNamed: "skater")
     
     override func didMove(to view: SKView) {
+        
+        physicsWorld.gravity = CGVector(dx: 0.0, dy: -6.0)
+        
+        physicsWorld.contactDelegate = self
+        
         anchorPoint = CGPoint.zero
         
         // Setup the background sprit
@@ -41,8 +69,9 @@ class GameScene: SKScene {
         background.position = CGPoint(x: frame.midX, y: frame.midY)
         addChild(background)
 
-        // Setup the skater sprit
-        resetSkater()
+        // Setup the skater sprit and add her to the scene
+        skater.setupPhysicsBody()
+        // resetSkater()
         addChild(skater)
         
         
@@ -50,6 +79,9 @@ class GameScene: SKScene {
         let tapMethod = #selector(GameScene.handleTap(tapGesture:))
         let tapGesture = UITapGestureRecognizer(target: self, action: tapMethod)
         view.addGestureRecognizer(tapGesture)
+        
+        // Start a new game
+        startNewGame()
     }
     
     func resetSkater() {
@@ -57,6 +89,46 @@ class GameScene: SKScene {
         skater.position = CGPoint(x: frame.midX / 2.0, y: skater.frame.height / 2.0 + 64.0)
         skater.zPosition = 10
         skater.minimumY = skater.frame.height / 2.0 + 64.0
+        
+        skater.zRotation = 0.0
+        skater.physicsBody?.velocity = CGVector(dx: 0.0, dy: 0.0)
+        skater.physicsBody?.angularVelocity = 0.0
+    }
+    
+    func spawnGem(atPosition pos: CGPoint) {
+        // Greate a gem sprite and add it to the scene
+        let gem = SKSpriteNode(imageNamed: "gem")
+        gem.position = pos
+        gem.zPosition = 9
+        addChild(gem)
+        
+        gem.physicsBody = SKPhysicsBody(rectangleOf: gem.size, center: gem.centerRect.origin)
+        gem.physicsBody?.categoryBitMask = PhysicsCategory.gem
+        gem.physicsBody?.affectedByGravity = false
+        
+        // Add the new gem to the array of gems
+        gems.append(gem)
+    }
+    
+    func removeGem(_ gem: SKSpriteNode) {
+        gem.removeFromParent()
+        
+        if let gemIndex = gems.firstIndex(of: gem) {
+            gems.remove(at: gemIndex)
+        }
+    }
+    
+    func updateGems (withScrollAmount currentScrollAmount: CGFloat) {
+        for gem in gems {
+            // Update each gem's position
+            let thisGemX = gem.position.x - currentScrollAmount
+            gem.position = CGPoint(x: thisGemX, y: gem.position.y)
+            
+            // Remove any gems that have moved offscreen
+            if gem.position.x < 0.0 {
+                removeGem(gem)
+            }
+        }
     }
     
     func spawnBrick(atPosition pos: CGPoint) -> SKSpriteNode {
@@ -71,6 +143,13 @@ class GameScene: SKScene {
         
         // Add the new brick to the array of bricks
         bricks.append(brick)
+        
+        // Set up brick's physics body
+        let center = brick.centerRect.origin
+        brick.physicsBody = SKPhysicsBody(rectangleOf: brick.size, center: center)
+        brick.physicsBody?.affectedByGravity = false
+        brick.physicsBody?.categoryBitMask = PhysicsCategory.brick
+        brick.physicsBody?.collisionBitMask = 0
         
         // Return this new brick to the caller
         return brick
@@ -107,7 +186,8 @@ class GameScene: SKScene {
         while farthestRightBrickX < frame.width {
             
             var brickX = farthestRightBrickX + brickSize.width + 1.0
-            let brickY = brickSize.height / 2.0
+            // let brickY = brickSize.height / 2.0
+            let brickY = ( brickSize.height / 2.0 ) + brickLevel.rawValue
             
             // Every now and then, leave a gap the player must jump over
             let randomNumber = arc4random_uniform(99)
@@ -117,6 +197,17 @@ class GameScene: SKScene {
                 // There's a 5 percent chance to leave a gap between bricks
                 let gap = 20.0 * scrollSpeed
                 brickX += gap
+                
+                // At each gap, add a gem
+                let randomGemYAmount = CGFloat(arc4random_uniform(150))
+                let newGemY = brickY + skater.size.height + randomGemYAmount
+                let newGemX = brickX - gap / 2.0
+                
+                spawnGem(atPosition: CGPoint(x: newGemX, y: newGemY))
+                
+            } else if randomNumber < 10 {
+                // There is a 5 percent chance that the brick level will change
+                brickLevel = (brickLevel == BrickLevel.low) ? BrickLevel.high : BrickLevel.low
             }
             
             // Spawn a new brick and update the rightmost brick
@@ -140,14 +231,18 @@ class GameScene: SKScene {
         if skater.isOnGround {
             
             // Set the skater's y-velocity to skater's initial jump speed
-            skater.velocity = CGPoint(x: 0.0, y: skater.jumpSpeed)
+            // skater.velocity = CGPoint(x: 0.0, y: skater.jumpSpeed)
             
             // Keep track of the fact that skater is no longer on the ground
-            skater.isOnGround = false
+            // skater.isOnGround = false
+            
+            skater.physicsBody?.applyImpulse(CGVector(dx: 0.0, dy: 260.0))
         }
     }
     
     func updateSkater() {
+        
+        /*
         if !skater.isOnGround {
             // Set the skater's new velocity as it is affected by 'gravity'
             let velocityY = skater.velocity.y - gravitySpeed
@@ -163,12 +258,74 @@ class GameScene: SKScene {
                 skater.velocity = CGPoint.zero
                 skater.isOnGround = true
             }
+        }*/
+        
+        
+        // Determine if the skater is currently on the ground
+        if let velocitY = skater.physicsBody?.velocity.dy {
+            if velocitY < -100.0 || velocitY > 100.0 {
+                skater.isOnGround = false
+            } else {
+                skater.isOnGround = true // bug fix for not jumping while click
+            }
+        }
+        
+        // Check if the game should end
+        let isOffScreen = skater.position.y < 0.0 || skater.position.x < 0.0
+        
+        let maxRotation = CGFloat(GLKMathDegreesToRadians(85.0))
+        let isTippedOver = skater.zRotation > maxRotation || skater.zRotation < -maxRotation
+        
+        if isOffScreen || isTippedOver {
+            gameOver()
+        }
+    }
+    
+    func startNewGame() {
+        // When a new game is started, reset to starting conditions
+        resetSkater()
+        
+        scrollSpeed = startingScrollSpeed
+        brickLevel = BrickLevel.low
+        lastUpdateTime = nil
+        
+        for brick in bricks {
+            brick.removeFromParent()
+        }
+        
+        bricks.removeAll(keepingCapacity: true)
+        
+        for gem in gems {
+            removeGem(gem)
+        }
+    }
+    
+    func gameOver() {
+        startNewGame()
+    }
+
+    
+    // MARK: SKPhysicsContactDelegate Methods
+    func didBegin(_ contact: SKPhysicsContact) {
+        // Check if the contact is between the skater and a brick
+        if contact.bodyA.categoryBitMask == PhysicsCategory.skater
+            && contact.bodyB.categoryBitMask == PhysicsCategory.brick {
+            skater.isOnGround = true
+        } else if contact.bodyA.categoryBitMask == PhysicsCategory.skater
+            && contact.bodyB.categoryBitMask == PhysicsCategory.gem {
+            // Skater touched a gem, so remove it
+            if let gem = contact.bodyB.node as? SKSpriteNode {
+                removeGem(gem)
+            }
         }
     }
     
     
     override func update(_ currentTime: TimeInterval) {
         // Called before each frame is rendered
+        
+        // Slowly increase the scrollSpeed as the game progresses
+        scrollSpeed += 0.01
         
         // Determine the elapsed time since the last update call
         var elapsedTime: TimeInterval = 0.0
@@ -188,6 +345,8 @@ class GameScene: SKScene {
         updateBricks(withScrollAmount: currentScrollAmount)
         
         updateSkater()
+        
+        updateGems(withScrollAmount: currentScrollAmount)
     }
 
 }
