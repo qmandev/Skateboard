@@ -27,6 +27,11 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         case high = 100.0
     }
     
+    enum GameState {
+        case notRunning
+        case running
+    }
+        
     private var label : SKLabelNode?
     private var spinnyNode : SKShapeNode?
     
@@ -39,6 +44,9 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     // The current brick level determine the y-position of new bricks
     var brickLevel = BrickLevel.low
     
+    // The current game state is tracked
+    var gameState = GameState.notRunning
+    
     // Setting for how fast the game is scrolling to the right
     // This may increase as the user progresses in the game
     var scrollSpeed: CGFloat = 5.0
@@ -46,6 +54,11 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     
     // A constant for gravity, or how fast objects will fall to Earth
     let gravitySpeed : CGFloat = 1.5
+    
+    // Properties for score tracking
+    var score: Int = 0
+    var highScore: Int = 0
+    var lastScoreUpdateTime: TimeInterval = 0.0
     
     // The timestamp of the last update method call
     var lastUpdateTime: TimeInterval?
@@ -68,6 +81,8 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         let background = SKSpriteNode(imageNamed: "background")
         background.position = CGPoint(x: frame.midX, y: frame.midY)
         addChild(background)
+        
+        setupLabels()
 
         // Setup the skater sprit and add her to the scene
         skater.setupPhysicsBody()
@@ -81,7 +96,17 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         view.addGestureRecognizer(tapGesture)
         
         // Start a new game
-        startNewGame()
+        // startNewGame()  // Remove this line of code
+        
+        // Add a menu overlay with "Tap to play" text
+        let menuBackgroundColor = UIColor.black.withAlphaComponent(0.4)
+        let menuLayer = MenuLayer(color: menuBackgroundColor, size: frame.size)
+        menuLayer.anchorPoint = CGPoint(x: 0.0, y: 0.0)
+        menuLayer.position = CGPoint(x: 0.0, y: 0.0)
+        menuLayer.zPosition = 30
+        menuLayer.name = "menuLayer"
+        menuLayer.display(message: "Tap to play", score: nil)
+        addChild(menuLayer)
     }
     
     func resetSkater() {
@@ -192,9 +217,11 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             // Every now and then, leave a gap the player must jump over
             let randomNumber = arc4random_uniform(99)
             
-            if randomNumber < 5 {
+            //if randomNumber < 5 {
+            if randomNumber < 2 && score > 10 {
                 
-                // There's a 5 percent chance to leave a gap between bricks
+                // -- There's a 5 percent chance to leave a gap between bricks
+                // There's a 2 percent chance to leave a gap between bricks after score of 10
                 let gap = 20.0 * scrollSpeed
                 brickX += gap
                 
@@ -205,8 +232,10 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
                 
                 spawnGem(atPosition: CGPoint(x: newGemX, y: newGemY))
                 
-            } else if randomNumber < 10 {
-                // There is a 5 percent chance that the brick level will change
+            //} else if randomNumber < 10 {
+            } else if randomNumber < 4 && score > 20 {
+                // --There is a 5 percent chance that the brick level will change
+                // There's a 2 percent chance that the brick Y level will change after score of 20
                 brickLevel = (brickLevel == BrickLevel.low) ? BrickLevel.high : BrickLevel.low
             }
             
@@ -227,17 +256,32 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     
     @objc func handleTap(tapGesture: UITapGestureRecognizer) {
         
-        // Make the skater jump if player taps while the skater is on the ground
-        if skater.isOnGround {
+        if gameState == .running {
+            // Make the skater jump if player taps while the skater is on the ground
+            if skater.isOnGround {
+                
+                // Set the skater's y-velocity to skater's initial jump speed
+                // skater.velocity = CGPoint(x: 0.0, y: skater.jumpSpeed)
+                
+                // Keep track of the fact that skater is no longer on the ground
+                // skater.isOnGround = false
+                
+                skater.physicsBody?.applyImpulse(CGVector(dx: 0.0, dy: 260.0))
+                
+                run(SKAction.playSoundFileNamed("gem.wav", waitForCompletion: false))
+            }
+        } else {
             
-            // Set the skater's y-velocity to skater's initial jump speed
-            // skater.velocity = CGPoint(x: 0.0, y: skater.jumpSpeed)
-            
-            // Keep track of the fact that skater is no longer on the ground
-            // skater.isOnGround = false
-            
-            skater.physicsBody?.applyImpulse(CGVector(dx: 0.0, dy: 260.0))
+            // If the game is not running, tapping starts a new game
+            if let menuLayer: SKSpriteNode = childNode(withName: "menuLayer") as? SKSpriteNode {
+                menuLayer.removeFromParent()
+            }
+
+            startNewGame()
         }
+        
+        
+
     }
     
     func updateSkater() {
@@ -281,9 +325,82 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         }
     }
     
+    func setupLabels() {
+        // Label that shows 'score' in the upper left
+        let scoreTextLabel: SKLabelNode = SKLabelNode(text: "score")
+        scoreTextLabel.position = CGPoint(x: 14.0, y: frame.size.height - 20.0)
+        scoreTextLabel.horizontalAlignmentMode = .left
+        scoreTextLabel.fontName = "Courier-Bold"
+        scoreTextLabel.fontSize = 14.0
+        scoreTextLabel.zPosition = 20
+        addChild(scoreTextLabel)
+        
+        // Label that shows the actual score
+        let scoreLabel: SKLabelNode = SKLabelNode(text: "0")
+        scoreLabel.position = CGPoint(x: 14.0, y: frame.size.height - 40.0)
+        scoreLabel.horizontalAlignmentMode = .left
+        scoreLabel.fontName = "Courier-Bold"
+        scoreLabel.fontSize = 18.0
+        scoreLabel.zPosition = 20
+        scoreLabel.name = "scoreLabel"
+        addChild(scoreLabel)
+        
+        // label that shows 'high score' in the upper right
+        let highScoreTextLabel: SKLabelNode = SKLabelNode(text: "high score")
+        highScoreTextLabel.position = CGPoint(x: frame.size.width - 14.0, y: frame.size.height - 20.0)
+        highScoreTextLabel.horizontalAlignmentMode = .right
+        highScoreTextLabel.fontName = "Courier-Bold"
+        highScoreTextLabel.fontSize = 14.0
+        highScoreTextLabel.zPosition = 20
+        addChild(highScoreTextLabel)
+        
+        // label that shows player's actual highest score
+        let highScoreLabel: SKLabelNode = SKLabelNode(text: "0")
+        highScoreLabel.position = CGPoint(x: frame.size.width - 14.0, y: frame.size.height - 40.0)
+        highScoreLabel.horizontalAlignmentMode = .right
+        highScoreLabel.fontName = "Courier-Bold"
+        highScoreLabel.fontSize = 18.0
+        highScoreLabel.zPosition = 20
+        highScoreLabel.name = "highScoreLabel"
+        addChild(highScoreLabel)
+        
+    }
+    
+    func updateScoreLabelText() {
+        if let scoreLabel = childNode(withName: "scoreLabel") as? SKLabelNode {
+            scoreLabel.text = String(format: "%04d", score)
+        }
+    }
+    
+    func updateHighScoreLabelText() {
+        if let highScoreLabel = childNode(withName: "highScoreLabel") as? SKLabelNode {
+            highScoreLabel.text = String(format: "%04d", highScore)
+        }
+    }
+    
+    func updateScore(withCurrentTime currentTime: TimeInterval) {
+        // Player's score increases the longer they survive
+        // Only update score every 1 second
+        let elapsedTime = currentTime - lastScoreUpdateTime
+        
+        if elapsedTime > 1.0 {
+            
+            // Increase the score
+            score += Int(scrollSpeed)
+            
+            // Reset the lastScoreUpdateTime to the current time
+            lastScoreUpdateTime = currentTime
+            
+            updateScoreLabelText()
+        }
+    }
+    
     func startNewGame() {
         // When a new game is started, reset to starting conditions
+        gameState = .running
         resetSkater()
+        
+        score = 0
         
         scrollSpeed = startingScrollSpeed
         brickLevel = BrickLevel.low
@@ -301,7 +418,27 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     }
     
     func gameOver() {
-        startNewGame()
+        // When game ends, see if player got a new high score
+        
+        gameState = .notRunning
+        
+        if score > highScore {
+            highScore = score
+            updateHighScoreLabelText()
+        }
+        
+        // startNewGame()
+        
+        // Show the "Game Over!" menu overlay
+        let menuBackgroundColor = UIColor.black.withAlphaComponent(0.4)
+        let menuLayer = MenuLayer(color: menuBackgroundColor, size: frame.size)
+        menuLayer.anchorPoint = CGPoint.zero
+        menuLayer.position = CGPoint.zero
+        menuLayer.zPosition = 30
+        menuLayer.name = "menuLayer"
+        menuLayer.display(message: "Game Over!", score: score)
+        addChild(menuLayer)
+
     }
 
     
@@ -316,6 +453,10 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             // Skater touched a gem, so remove it
             if let gem = contact.bodyB.node as? SKSpriteNode {
                 removeGem(gem)
+                
+                // Give player 50 points for getting a gem
+                score += 50
+                updateScoreLabelText()
             }
         }
     }
@@ -323,6 +464,10 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     
     override func update(_ currentTime: TimeInterval) {
         // Called before each frame is rendered
+        
+        if gameState != .running {
+            return
+        }
         
         // Slowly increase the scrollSpeed as the game progresses
         scrollSpeed += 0.01
@@ -347,6 +492,8 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         updateSkater()
         
         updateGems(withScrollAmount: currentScrollAmount)
+        
+        updateScore(withCurrentTime: currentTime)
     }
 
 }
