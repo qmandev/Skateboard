@@ -27,4 +27,31 @@ class Skater: SKSpriteNode {
             physicsBody?.contactTestBitMask = PhysicsCategory.brick | PhysicsCategory.gem
         }
     }
+    
+    func createSparks() {
+        
+        // Find the sparks emitter file in the project's bundle
+        let bundle = Bundle.main
+        
+        do {
+            let sparkPath = bundle.url(forResource: "Sparks", withExtension: "sks")!
+            let sparkData = try Data(contentsOf: sparkPath)
+                
+            // Create a Sparks emitter node
+            let sparksNode = try NSKeyedUnarchiver.unarchiveTopLevelObjectWithData(sparkData) as! SKEmitterNode
+                    
+            sparksNode.position = CGPoint(x: 0.0, y: -50.0)
+            addChild(sparksNode)
+            
+            // Run an action to wait half a second and then remove the emitter
+            let waitAction = SKAction.wait(forDuration: 0.5)
+            let removeAction = SKAction.removeFromParent()
+            let waitThenRemove = SKAction.sequence([waitAction, removeAction])
+            
+            sparksNode.run(waitThenRemove)
+            
+        } catch {
+            print("Didn't find sparks emitter file ")
+        }
+    }
 }

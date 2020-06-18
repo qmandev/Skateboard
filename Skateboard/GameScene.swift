@@ -268,7 +268,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
                 
                 skater.physicsBody?.applyImpulse(CGVector(dx: 0.0, dy: 260.0))
                 
-                run(SKAction.playSoundFileNamed("gem.wav", waitForCompletion: false))
+                run(SKAction.playSoundFileNamed("jump.wav", waitForCompletion: false))
             }
         } else {
             
@@ -447,6 +447,13 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         // Check if the contact is between the skater and a brick
         if contact.bodyA.categoryBitMask == PhysicsCategory.skater
             && contact.bodyB.categoryBitMask == PhysicsCategory.brick {
+            
+            if let velocityY = skater.physicsBody?.velocity.dy {
+                if !skater.isOnGround && velocityY < 100.0 {
+                    skater.createSparks()
+                }
+            }
+            
             skater.isOnGround = true
         } else if contact.bodyA.categoryBitMask == PhysicsCategory.skater
             && contact.bodyB.categoryBitMask == PhysicsCategory.gem {
@@ -457,6 +464,8 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
                 // Give player 50 points for getting a gem
                 score += 50
                 updateScoreLabelText()
+                
+                run(SKAction.playSoundFileNamed("gem.wav", waitForCompletion: false))
             }
         }
     }

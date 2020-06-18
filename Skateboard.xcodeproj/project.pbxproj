@@ -18,6 +18,9 @@
 		A9CB54BB2478AFE800DD4922 /* SkateboardUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9CB54BA2478AFE800DD4922 /* SkateboardUITests.swift */; };
 		A9CB54C624796D1600DD4922 /* Skater.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9CB54C524796D1600DD4922 /* Skater.swift */; };
 		A9CB555F249B928E00DD4922 /* MenuLayer.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9CB555E249B928E00DD4922 /* MenuLayer.swift */; };
+		A9CB5562249BADB300DD4922 /* gem.wav in Resources */ = {isa = PBXBuildFile; fileRef = A9CB5561249BADB300DD4922 /* gem.wav */; };
+		A9CB5564249BADCE00DD4922 /* jump.wav in Resources */ = {isa = PBXBuildFile; fileRef = A9CB5563249BADCE00DD4922 /* jump.wav */; };
+		A9CB5566249BCCA100DD4922 /* Sparks.sks in Resources */ = {isa = PBXBuildFile; fileRef = A9CB5565249BCCA100DD4922 /* Sparks.sks */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -46,6 +49,9 @@
 		A9CB54BC2478AFE800DD4922 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		A9CB54C524796D1600DD4922 /* Skater.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Skater.swift; sourceTree = "<group>"; };
 		A9CB555E249B928E00DD4922 /* MenuLayer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MenuLayer.swift; sourceTree = "<group>"; };
+		A9CB5561249BADB300DD4922 /* gem.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = gem.wav; sourceTree = "<group>"; };
+		A9CB5563249BADCE00DD4922 /* jump.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = jump.wav; sourceTree = "<group>"; };
+		A9CB5565249BCCA100DD4922 /* Sparks.sks */ = {isa = PBXFileReference; lastKnownFileType = file.sks; path = Sparks.sks; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -95,6 +101,8 @@
 				A9CB54A52478AFE400DD4922 /* GameScene.swift */,
 				A9CB54A72478AFE400DD4922 /* GameViewController.swift */,
 				A9CB54A92478AFE400DD4922 /* Main.storyboard */,
+				A9CB5565249BCCA100DD4922 /* Sparks.sks */,
+				A9CB5560249BAD7B00DD4922 /* Sounds */,
 				A9CB54AC2478AFE800DD4922 /* Assets.xcassets */,
 				A9CB54AE2478AFE800DD4922 /* LaunchScreen.storyboard */,
 				A9CB54B12478AFE800DD4922 /* Info.plist */,
@@ -109,6 +117,15 @@
 				A9CB54BC2478AFE800DD4922 /* Info.plist */,
 			);
 			path = SkateboardUITests;
+			sourceTree = "<group>";
+		};
+		A9CB5560249BAD7B00DD4922 /* Sounds */ = {
+			isa = PBXGroup;
+			children = (
+				A9CB5563249BADCE00DD4922 /* jump.wav */,
+				A9CB5561249BADB300DD4922 /* gem.wav */,
+			);
+			path = Sounds;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -192,9 +209,12 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				A9CB5562249BADB300DD4922 /* gem.wav in Resources */,
 				A9CB54AB2478AFE400DD4922 /* Main.storyboard in Resources */,
 				A9CB54A22478AFE400DD4922 /* GameScene.sks in Resources */,
+				A9CB5564249BADCE00DD4922 /* jump.wav in Resources */,
 				A9CB54AD2478AFE800DD4922 /* Assets.xcassets in Resources */,
+				A9CB5566249BCCA100DD4922 /* Sparks.sks in Resources */,
 				A9CB54B02478AFE800DD4922 /* LaunchScreen.storyboard in Resources */,
 				A9CB54A42478AFE400DD4922 /* Actions.sks in Resources */,
 			);
